@@ -28,5 +28,8 @@ router.use("/friends", friendshipApi);
 // conversationApi
 const conversationApi = require("./conversation.api");
 router.use("/conversations", conversationApi);
+// game API
+const gameApi = require("./game.api");
+router.use("/games", gameApi);
 
 module.exports = router;

@@ -152,7 +152,8 @@ userController.getUsers = catchAsync(async (req, res, next) => {
 
 userController.getCurrentUser = catchAsync(async (req, res, next) => {
   const userId = req.userId;
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate("favoriteWords");
+
   return sendResponse(
     res,
     200,
@@ -509,6 +510,19 @@ userController.getConversationList = catchAsync(async (req, res, next) => {
     { conversations: filteredConv, totalPages },
     null,
     null
+  );
+});
+
+userController.getFavor = catchAsync(async (req, res, next) => {
+  const userId = req.userId;
+  const user = await User.findById(userId);
+  return sendResponse(
+    res,
+    200,
+    true,
+    user,
+    null,
+    "Get favorite word successful"
   );
 });
 

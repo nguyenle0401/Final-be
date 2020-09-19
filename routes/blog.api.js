@@ -6,13 +6,19 @@ const authMiddleware = require("../middlewares/authentication");
 const fileUpload = require("../helpers/upload.helper")("public/images/");
 const uploader = fileUpload.uploader;
 const { body, param } = require("express-validator");
-
 /**
  * @route GET api/blogs?page=1&limit=10
  * @description Get blogs with pagination
  * @access Public
  */
 router.get("/", blogController.getBlogs);
+
+router.get(
+  "/favorite/:id",
+  param("id").exists().isString().custom(validators.checkObjectId),
+  authMiddleware.loginRequired,
+  blogController.favoriteWord
+);
 
 /**
  * @route GET api/blogs/:id

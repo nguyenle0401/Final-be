@@ -4,7 +4,7 @@ const Mailgun = require("mailgun-js");
 MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
 
-FROM_EMAIL = "social_blog@coderschool.vn";
+FROM_EMAIL = "nle20959@gmail.com";
 
 console.log({ MAILGUN_API_KEY, MAILGUN_DOMAIN, FROM_EMAIL });
 

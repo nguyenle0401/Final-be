@@ -6,6 +6,8 @@ const {
 const Blog = require("../models/Blog");
 const Review = require("../models/Review");
 const blogController = {};
+const User = require("../models/User");
+const mongoose = require("mongoose");
 
 blogController.getBlogs = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = { ...req.query };
@@ -97,6 +99,41 @@ blogController.deleteSingleBlog = catchAsync(async (req, res, next) => {
       )
     );
   return sendResponse(res, 200, true, null, null, "Delete Blog successful");
+});
+//get /api/blogs/favorite/:id
+blogController.favoriteWord = catchAsync(async (req, res, next) => {
+  const blogId = req.params.id;
+  const exist = await Blog.exists({ _id: blogId, isDeleted: false });
+  if (!exist) {
+    return next(new AppError(404, "Word not found"));
+  }
+  const check = await User.exists({
+    _id: req.userId,
+    favoriteWords: blogId,
+  });
+  console.log(blogId);
+  let user;
+  if (!check) {
+    user = await User.findOneAndUpdate(
+      { _id: req.userId },
+      {
+        $addToSet: { favoriteWords: mongoose.Types.ObjectId(blogId) },
+      },
+      { new: true }
+    );
+  } else {
+    user = await User.findOneAndUpdate(
+      { _id: req.userId },
+      {
+        $pull: { favoriteWords: mongoose.Types.ObjectId(blogId) },
+      },
+      { new: true }
+    );
+  }
+  console.log(user);
+  // console.log(user);
+  res.send(user);
+  // res.send("Hehe");
 });
 
 module.exports = blogController;

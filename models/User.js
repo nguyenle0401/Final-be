@@ -12,6 +12,7 @@ const userSchema = Schema(
     emailVerificationCode: { type: String, select: false },
     emailVerified: { type: Boolean, require: true, default: false },
     friendCount: { type: Number, default: 0 },
+    favoriteWords: [{ type: Schema.ObjectId, required: true, ref: "Blog" }],
     isDeleted: { type: Boolean, default: false, select: false },
   },
   { timestamps: true }
