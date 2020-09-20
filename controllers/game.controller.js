@@ -26,6 +26,7 @@ exports.newGame = catchAsync(async (req, res, next) => {
   );
   const fake = await Promise.all(fakePromises);
   const questions = rawQuestions.map((e, i) => {
+    console.log("ahihe", e);
     return {
       ...e,
       answer: e.content,
