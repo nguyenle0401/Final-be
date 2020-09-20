@@ -5,7 +5,7 @@ MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
 
 FROM_EMAIL = "nle20959@gmail.com";
-
+TO_EMAIL = "kupid0yeuai@gmail.com";
 console.log({ MAILGUN_API_KEY, MAILGUN_DOMAIN, FROM_EMAIL });
 
 const mailgun = new Mailgun({
@@ -17,10 +17,10 @@ const data = {
   //Specify email data
   from: FROM_EMAIL,
   //The email to contact
-  to: "minhdh@coderschool.vn",
+  to: TO_EMAIL,
   //Subject and text data
   subject: "Hello from Mailgun",
-  html: "<h4>Welcome to the social blog app</h4>",
+  html: "<h4>Welcome to the Odiom app</h4>",
 };
 
 //Invokes the method to send emails given the above data with the helper library
