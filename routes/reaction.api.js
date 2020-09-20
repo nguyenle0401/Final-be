@@ -7,14 +7,14 @@ const reactionController = require("../controllers/reaction.controller");
 
 /**
  * @route POST api/reactions
- * @description Save a reaction to blog or review
+ * @description Save a reaction to idiom or review
  * @access Login required
  */
 router.post(
   "/",
   authMiddleware.loginRequired,
   validators.validate([
-    body("targetType", "Invalid targetType").exists().isIn(["Blog", "Review"]),
+    body("targetType", "Invalid targetType").exists().isIn(["Idiom", "Review"]),
     body("target", "Invalid target").exists().custom(validators.checkObjectId),
     body("emoji", "Invalid emoji")
       .exists()

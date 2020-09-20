@@ -6,7 +6,7 @@
 
 require("dotenv").config();
 var app = require("../app");
-var debug = require("debug")("social-blog-api:server");
+var debug = require("debug")("idiom-api:server");
 var http = require("http");
 
 /**

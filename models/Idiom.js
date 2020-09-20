@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const blogSchema = Schema(
+const idiomSchema = Schema(
   {
     title: { type: String, required: true },
     content: { type: String, required: true },
@@ -24,7 +24,7 @@ const blogSchema = Schema(
   { timestamps: true }
 );
 
-blogSchema.plugin(require("./plugins/isDeletedFalse"));
+idiomSchema.plugin(require("./plugins/isDeletedFalse"));
 
-const Blog = mongoose.model("Blog", blogSchema);
-module.exports = Blog;
+const Idiom = mongoose.model("Idiom", idiomSchema);
+module.exports = Idiom;

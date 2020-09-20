@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
-const Blog = require("../models/Blog");
+const Idiom = require("../models/Idiom");
 const Review = require("../models/Review");
 const Reaction = require("../models/Reaction");
 const Friendship = require("../models/Friendship");
@@ -23,7 +23,7 @@ function getRandomInt(min, max) {
 const cleanData = async (startTime) => {
   try {
     await User.collection.drop();
-    await Blog.collection.drop();
+    await Idiom.collection.drop();
     await Review.collection.drop();
     await Reaction.collection.drop();
     await Friendship.collection.drop();
@@ -39,11 +39,11 @@ const generateData = async () => {
   try {
     await cleanData();
     let users = [];
-    let blogs = [];
+    let idioms = [];
     console.log("| Create 10 users:");
     console.log("-------------------------------------------");
     const userNum = 10;
-    const otherNum = 3; // num of blog each user, reviews or reactions each blog
+    const otherNum = 3; // num of idiom each user, reviews or reactions each idiom
     for (let i = 0; i < userNum; i++) {
       const salt = await bcrypt.genSalt(10);
       const password = await bcrypt.hash("123", salt);
@@ -67,11 +67,11 @@ const generateData = async () => {
         status: "accepted",
       });
     }
-    console.log(`| Each user writes ${otherNum} blogs`);
+    console.log(`| Each user writes ${otherNum} idioms`);
     console.log("-------------------------------------------");
     for (let i = 0; i < userNum; i++) {
       for (let j = 0; j < otherNum; j++) {
-        await Blog.create({
+        await Idiom.create({
           title: faker.lorem.sentence(),
           content: faker.lorem.paragraph(),
           images: [
@@ -79,24 +79,24 @@ const generateData = async () => {
             faker.image.imageUrl(400, 300),
           ],
           author: users[i]._id,
-        }).then(async (blog) => {
-          console.log("Created blog:" + blog.title);
-          blogs.push(blog);
+        }).then(async (idiom) => {
+          console.log("Created idiom:" + idiom.title);
+          idioms.push(idiom);
 
           console.log(
-            `| Each blog has ${otherNum} reviews from ${otherNum} random users`
+            `| Each idiom has ${otherNum} reviews from ${otherNum} random users`
           );
           console.log("-------------------------------------------");
           for (let k = 0; k < otherNum; k++) {
             await Review.create({
               content: faker.lorem.sentence(),
               user: users[getRandomInt(0, userNum - 1)]._id,
-              blog: blog._id,
+              idiom: idiom._id,
             });
           }
 
           console.log(
-            `| Each blog has ${otherNum} reactions from ${otherNum} random users`
+            `| Each idiom has ${otherNum} reactions from ${otherNum} random users`
           );
           console.log("-------------------------------------------");
           const emojis = ["laugh", "sad", "like", "love", "angry"];
@@ -104,8 +104,8 @@ const generateData = async () => {
             await Reaction.create({
               content: faker.lorem.sentence(),
               user: users[getRandomInt(0, userNum - 1)]._id,
-              targetType: "Blog",
-              target: blog._id,
+              targetType: "Idiom",
+              target: idiom._id,
               emoji: emojis[getRandomInt(0, 4)],
             });
           }
@@ -119,20 +119,20 @@ const generateData = async () => {
   }
 };
 
-const getRandomBlogs = async (blogNum) => {
-  console.log(`Get ${blogNum} random blogs`);
-  const totalBlogNum = await Blog.countDocuments();
-  for (let i = 0; i < blogNum; ++i) {
-    const blog = await Blog.findOne()
-      .skip(getRandomInt(0, totalBlogNum - 1))
+const getRandomIdioms = async (idiomNum) => {
+  console.log(`Get ${idiomNum} random idioms`);
+  const totalIdiomNum = await Idiom.countDocuments();
+  for (let i = 0; i < idiomNum; ++i) {
+    const idiom = await Idiom.findOne()
+      .skip(getRandomInt(0, totalIdiomNum - 1))
       .populate("author");
-    console.log(blog);
+    console.log(idiom);
   }
 };
 
 const main = async (resetDB = false) => {
   if (resetDB) await generateData();
-  getRandomBlogs(1);
+  getRandomIdioms(1);
 };
 
 main(true);

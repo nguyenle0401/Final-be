@@ -3,7 +3,7 @@ const {
   AppError,
   sendResponse,
 } = require("../helpers/utils.helper");
-const Blog = require("../models/Blog");
+const Idiom = require("../models/Idiom");
 
 exports.newGame = catchAsync(async (req, res, next) => {
   let time = req.query.time || 5;
@@ -11,14 +11,14 @@ exports.newGame = catchAsync(async (req, res, next) => {
   let qty = req.query.qty * 1 || 5;
   qty = qty > 20 ? 20 : qty;
 
-  const rawQuestions = await Blog.aggregate([
+  const rawQuestions = await Idiom.aggregate([
     { $sample: { size: qty } },
     { $project: { _id: 1, title: 1, content: 1 } },
   ]);
 
   const fakePromises = rawQuestions.map(
     async (e) =>
-      await Blog.aggregate([
+      await Idiom.aggregate([
         { $match: { content: { $ne: e.content } } },
         { $sample: { size: 100 } },
         { $project: { _id: 1, content: 1 } },

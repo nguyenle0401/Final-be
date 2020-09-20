@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
-const Blog = require("./Blog");
+const Idiom = require("./Idiom");
 const Schema = mongoose.Schema;
 
 const reviewSchema = Schema(
   {
     content: { type: String, required: true },
     user: { type: Schema.ObjectId, required: true, ref: "User" },
-    blog: { type: Schema.ObjectId, required: true, ref: "Blog" },
+    idiom: { type: Schema.ObjectId, required: true, ref: "Idiom" },
     reactions: {
       laugh: { type: Number, default: 0 },
       sad: { type: Number, default: 0 },
@@ -18,13 +18,13 @@ const reviewSchema = Schema(
   { timestamps: true }
 );
 
-reviewSchema.statics.calculateReviews = async function (blogId) {
-  const reviewCount = await this.find({ blog: blogId }).countDocuments();
-  await Blog.findByIdAndUpdate(blogId, { reviewCount: reviewCount });
+reviewSchema.statics.calculateReviews = async function (idiomId) {
+  const reviewCount = await this.find({ idiom: idiomId }).countDocuments();
+  await Idiom.findByIdAndUpdate(idiomId, { reviewCount: reviewCount });
 };
 
 reviewSchema.post("save", async function () {
-  await this.constructor.calculateReviews(this.blog);
+  await this.constructor.calculateReviews(this.idiom);
 });
 
 // Neither findByIdAndUpdate norfindByIdAndDelete have access to document middleware.
@@ -37,7 +37,7 @@ reviewSchema.pre(/^findOneAnd/, async function (next) {
 });
 
 reviewSchema.post(/^findOneAnd/, async function (next) {
-  await this.doc.constructor.calculateReviews(this.doc.blog);
+  await this.doc.constructor.calculateReviews(this.doc.idiom);
 });
 
 const Review = mongoose.model("Review", reviewSchema);

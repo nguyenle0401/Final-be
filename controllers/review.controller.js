@@ -4,22 +4,24 @@ const {
   sendResponse,
 } = require("../helpers/utils.helper");
 const Review = require("../models/Review");
-const Blog = require("../models/Blog");
+const Idiom = require("../models/Idiom");
 
 const reviewController = {};
 
 reviewController.createNewReview = catchAsync(async (req, res, next) => {
   const userId = req.userId;
-  const blogId = req.params.id;
+  const idiomId = req.params.id;
   const { content } = req.body;
 
-  const blog = Blog.findById(blogId);
-  if (!blog)
-    return next(new AppError(404, "Blog not found", "Create New Review Error"));
+  const idiom = Idiom.findById(idiomId);
+  if (!idiom)
+    return next(
+      new AppError(404, "Idiom not found", "Create New Review Error")
+    );
 
   let review = await Review.create({
     user: userId,
-    blog: blogId,
+    idiom: idiomId,
     content,
   });
   review = await review.populate("user").execPopulate();
@@ -33,20 +35,22 @@ reviewController.createNewReview = catchAsync(async (req, res, next) => {
   );
 });
 
-reviewController.getReviewsOfBlog = catchAsync(async (req, res, next) => {
-  const blogId = req.params.id;
+reviewController.getReviewsOfIdiom = catchAsync(async (req, res, next) => {
+  const idiomId = req.params.id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
 
-  const blog = Blog.findById(blogId);
-  if (!blog)
-    return next(new AppError(404, "Blog not found", "Create New Review Error"));
+  const idiom = Idiom.findById(idiomId);
+  if (!idiom)
+    return next(
+      new AppError(404, "Idiom not found", "Create New Review Error")
+    );
 
-  const totalReviews = await Review.countDocuments({ blog: blogId });
+  const totalReviews = await Review.countDocuments({ idiom: idiomId });
   const totalPages = Math.ceil(totalReviews / limit);
   const offset = limit * (page - 1);
 
-  const reviews = await Review.find({ blog: blogId })
+  const reviews = await Review.find({ idiom: idiomId })
     .sort({ createdAt: -1 })
     .skip(offset)
     .limit(limit);

@@ -6,25 +6,25 @@ const authMiddleware = require("../middlewares/authentication");
 const { body, param } = require("express-validator");
 
 /**
- * @route GET api/reviews/blogs/:id?page=1&limit=10
- * @description Get reviews of a blog with pagination
+ * @route GET api/reviews/idioms/:id?page=1&limit=10
+ * @description Get reviews of a idiom with pagination
  * @access Public
  */
 router.get(
-  "/blogs/:id",
+  "/idioms/:id",
   validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId),
   ]),
-  reviewController.getReviewsOfBlog
+  reviewController.getReviewsOfIdiom
 );
 
 /**
- * @route POST api/reviews/blogs/:id
- * @description Create a new review for a blog
+ * @route POST api/reviews/idioms/:id
+ * @description Create a new review for a idiom
  * @access Login required
  */
 router.post(
-  "/blogs/:id",
+  "/idioms/:id",
   authMiddleware.loginRequired,
   validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId),

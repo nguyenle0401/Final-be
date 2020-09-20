@@ -1,28 +1,28 @@
 const express = require("express");
 const router = express.Router();
-const blogController = require("../controllers/blog.controller");
+const idiomController = require("../controllers/idiom.controller");
 const validators = require("../middlewares/validators");
 const authMiddleware = require("../middlewares/authentication");
 const fileUpload = require("../helpers/upload.helper")("public/images/");
 const uploader = fileUpload.uploader;
 const { body, param } = require("express-validator");
 /**
- * @route GET api/blogs?page=1&limit=10
- * @description Get blogs with pagination
+ * @route GET api/idioms?page=1&limit=10
+ * @description Get idioms with pagination
  * @access Public
  */
-router.get("/", blogController.getBlogs);
+router.get("/", idiomController.getIdioms);
 
 router.get(
   "/favorite/:id",
   param("id").exists().isString().custom(validators.checkObjectId),
   authMiddleware.loginRequired,
-  blogController.favoriteWord
+  idiomController.favoriteWord
 );
 
 /**
- * @route GET api/blogs/:id
- * @description Get a single blog
+ * @route GET api/idioms/:id
+ * @description Get a single idiom
  * @access Public
  */
 router.get(
@@ -30,12 +30,12 @@ router.get(
   validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId),
   ]),
-  blogController.getSingleBlog
+  idiomController.getSingleIdiom
 );
 
 /**
- * @route POST api/blogs
- * @description Create a new blog
+ * @route POST api/idioms
+ * @description Create a new idiom
  * @access Login required
  */
 router.post(
@@ -46,12 +46,12 @@ router.post(
     body("title", "Missing title").exists().notEmpty(),
     body("content", "Missing content").exists().notEmpty(),
   ]),
-  blogController.createNewBlog
+  idiomController.createNewIdiom
 );
 
 /**
- * @route PUT api/blogs/:id
- * @description Update a blog
+ * @route PUT api/idioms/:id
+ * @description Update a idiom
  * @access Login required
  */
 router.put(
@@ -62,12 +62,12 @@ router.put(
     body("title", "Missing title").exists().notEmpty(),
     body("content", "Missing content").exists().notEmpty(),
   ]),
-  blogController.updateSingleBlog
+  idiomController.updateSingleIdiom
 );
 
 /**
- * @route DELETE api/blogs/:id
- * @description Delete a blog
+ * @route DELETE api/idioms/:id
+ * @description Delete a idiom
  * @access Login required
  */
 router.delete(
@@ -76,7 +76,7 @@ router.delete(
   validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId),
   ]),
-  blogController.deleteSingleBlog
+  idiomController.deleteSingleIdiom
 );
 
 module.exports = router;

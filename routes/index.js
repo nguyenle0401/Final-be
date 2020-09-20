@@ -9,9 +9,9 @@ router.use("/users", userApi);
 const authApi = require("./auth.api");
 router.use("/auth", authApi);
 
-// blogApi
-const blogApi = require("./blog.api");
-router.use("/blogs", blogApi);
+// idiomApi
+const idiomApi = require("./idiom.api");
+router.use("/idioms", idiomApi);
 
 // reviewApi
 const reviewApi = require("./review.api");

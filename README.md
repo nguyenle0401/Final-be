@@ -1,9 +1,9 @@
 ---
-title: FTW Week 8 - Social Blog API
+title: FTW Final - Idiom API
 tags: CoderSchool, FTW, Project
 ---
 
-# Social Blog API
+# Social Idiom API
 
 ## Introductions
 
@@ -13,8 +13,8 @@ tags: CoderSchool, FTW, Project
 
 - Create an express app using `express-generator`:
   ```bash
-  mkdir social-blog-api
-  cd social-blog-api
+  mkdir idiom-api
+  cd idiom-api
   npx express-generator --no-view
   npm install
   git init
@@ -53,7 +53,7 @@ tags: CoderSchool, FTW, Project
   ```
 - In `/routes/index.js`, replace `res.render('index', { title: 'Express' });` with
   ```javascript
-  res.send({status:'ok', data:"Hello World!"});
+  res.send({ status: "ok", data: "Hello World!" });
   ```
 - Test the app: `npm run dev`, then open `localhost:5000` on the browser.
 - Commit git for the first time.
@@ -74,10 +74,11 @@ tags: CoderSchool, FTW, Project
 ### Setup `app.js`
 
 - Create `/helpers/utils.helper.js`:
+
   ```javascript
   "use strict";
   const utilsHelper = {};
-  
+
   // This function controls the way we response to the client
   // If we need to change the way to response later on, we only need to handle it here
   utilsHelper.sendResponse = (res, status, success, data, errors, message) => {
@@ -91,9 +92,11 @@ tags: CoderSchool, FTW, Project
 
   module.exports = utilsHelper;
   ```
+
   In `app.js`, add: `const utilsHelper = require("./helpers/utils.helper");`
 
 - In `routes/`, delete `users.js`. In `app.js`,remove
+
   ```diff
   -const usersRouter = require("./routes/users");
   ...
@@ -101,6 +104,7 @@ tags: CoderSchool, FTW, Project
   ```
 
 - Import `cors`:
+
   ```diff
   +const cors = require("cors")
   ...
@@ -109,11 +113,15 @@ tags: CoderSchool, FTW, Project
   ```
 
 - Connect to DB
+
   - In `.env`, add
+
   ```
-  MONGODB_URI='mongodb://localhost:27017/social_blog'
+  MONGODB_URI='mongodb://localhost:27017/idioms'
   ```
+
   - In `app.js`:
+
   ```javascript
   const mongoose = require('mongoose')
   const mongoURI = process.env.MONGODB_URI
@@ -134,6 +142,7 @@ tags: CoderSchool, FTW, Project
   ```
 
 - Error Handling: In `app.js`, add
+
   ```javascript
   /* Initialize Routes */
   app.use("/api", indexRouter);
@@ -160,20 +169,24 @@ tags: CoderSchool, FTW, Project
 
   module.exports = app;
   ```
+
 - Test `localhost:5000\api\`, `localhost:5000\whatever`
 
 ### Design the endpoints
 
 - Authentication
+
 ```javascript
-/** 
- * @route POST api/auth/login 
- * @route GET api/auth/logout 
+/**
+ * @route POST api/auth/login
+ * @route GET api/auth/logout
  */
 ```
+
 - User model
+
 ```javascript
-/** 
+/**
  * @route POST api/users - Register
  * @route GET api/users?page=1&limit=20
  * @route GET api/users/me - Get current user
@@ -182,36 +195,44 @@ tags: CoderSchool, FTW, Project
  * @route PUT api/users/me/password - Change Password
  */
 ```
-- Blog model
+
+- Idiom model
+
 ```javascript
-/** 
- * @route GET api/blogs?page=1&limit=10 - Get blogs with pagination
- * @route GET api/users/:id/blogs?page=1&limit=20 - Get blogs from user
- * @route GET api/blogs/friends?page=1&limit=20 - Get blogs from friends
- * @route GET api/blogs/:id - Get blog detail
- * @route POST api/blogs/:id - Create a new blog
- * @route PUT api/blogs/:id - Update a blog
- * @route DELETE api/blogs/:id - Remove a blog
+/**
+ * @route GET api/idioms?page=1&limit=10 - Get idioms with pagination
+ * @route GET api/users/:id/idioms?page=1&limit=20 - Get idioms from user
+ * @route GET api/idioms/friends?page=1&limit=20 - Get idioms from friends
+ * @route GET api/idioms/:id - Get idiom detail
+ * @route POST api/idioms/:id - Create a new idiom
+ * @route PUT api/idioms/:id - Update a idiom
+ * @route DELETE api/idioms/:id - Remove a idiom
  */
 ```
+
 - Review model
+
 ```javascript
-/** 
- * @route GET api/blogs/:id/reviews?page=1&limit=10 - Get reiviews from a blog
- * @route POST api/blogs/:id/reviews - Create new review for a blog
- * @route PUT api/blogs/:id/reviews/:id - Update review
- * @route DELETE api/blogs/:id/reviews/:id - Delete review
+/**
+ * @route GET api/idioms/:id/reviews?page=1&limit=10 - Get reiviews from a idiom
+ * @route POST api/idioms/:id/reviews - Create new review for a idiom
+ * @route PUT api/idioms/:id/reviews/:id - Update review
+ * @route DELETE api/idioms/:id/reviews/:id - Delete review
  */
 ```
+
 - Reaction
+
 ```javascript
-/** 
+/**
  * @route POST api/reactions
  */
 ```
+
 - Friends
+
 ```javascript
-/** 
+/**
  * @route GET api/friends/manage/:id - Get the list of friends
  * @route GET api/friends/add/:id - Get the list of friend requests
  * @route POST api/friends/add/:id - Send friend request
@@ -224,39 +245,44 @@ tags: CoderSchool, FTW, Project
 ### Design the DB
 
 When modeling "One-to-Many" relationship in MongoDB, you have a variety of choices, so you have to carefully think through the structure of your data. The main criteria you need to consider are:
-  - What is the cardinality of the relationships: "one-to-few", "one-to-many", "one-to-squillions"?
-  - Do you need to access the object on the "N" side separately, or only in the context of the parent object?
-  - What is the ratio of updates to reads for a particular field?
-Your main choices for structuring the data are:
-  - For "one-to-few", you can use an array of embedded documents
-  - For "one-to-many", or when the "N" side must stand alone, you should use an array of references. You can also use the "parent-reference" on the "N" side if it optimizes your data access pattern.
-  - For "one-to-squillions", you should use a "parent-reference" in the document storing the "N" side.
+
+- What is the cardinality of the relationships: "one-to-few", "one-to-many", "one-to-squillions"?
+- Do you need to access the object on the "N" side separately, or only in the context of the parent object?
+- What is the ratio of updates to reads for a particular field?
+  Your main choices for structuring the data are:
+- For "one-to-few", you can use an array of embedded documents
+- For "one-to-many", or when the "N" side must stand alone, you should use an array of references. You can also use the "parent-reference" on the "N" side if it optimizes your data access pattern.
+- For "one-to-squillions", you should use a "parent-reference" in the document storing the "N" side.
 
 The "One-to-Many" relationships in this app are:
-  - An User can write many blogs -> "one-to-squillions", we won't limit the number of blogs a user can write. So we will use a user reference in the blog schema.
 
-  - An User can have many friends which are also users -> here it seems like the relationship friendship occurs in only one context user. But it's actually two. If we store a list of friends as an array of references, then when we want to update (e.g. user removes a friend), we need to update two lists from each user. Basically, this relationship is "many-to-many". The solution here is a new schema `friendship` which contains `from`, `to` (user ID of the one who sent the friend request and the one who received it), and `status` (requesting, accepted, decline, removed).
+- An User can write many idioms -> "one-to-squillions", we won't limit the number of idioms a user can write. So we will use a user reference in the idiom schema.
 
-  - A blog can have unlimited reviews and user can react to a review -> so we use "parent-reference" to `user` and `blog` concept in the schema `reactions`.
+- An User can have many friends which are also users -> here it seems like the relationship friendship occurs in only one context user. But it's actually two. If we store a list of friends as an array of references, then when we want to update (e.g. user removes a friend), we need to update two lists from each user. Basically, this relationship is "many-to-many". The solution here is a new schema `friendship` which contains `from`, `to` (user ID of the one who sent the friend request and the one who received it), and `status` (requesting, accepted, decline, removed).
 
-  - User can react (laugh, sad, like, love, angry) to a blog or a review -> the reactions occur in two contexts (blog and review) so we need to create a schema for it. The relationship between blog to reactions and review to reactions is unlimited ("one-to-squillions"), so we use "parent-reference" to `user` and `blog` concept in the schema `reactions`. In addition, because we need to sum the reactions in each group and show it as the content of blog and reviews, we will denormalize that information and put it in the `blog` and `review` schema.
+- A idiom can have unlimited reviews and user can react to a review -> so we use "parent-reference" to `user` and `idiom` concept in the schema `reactions`.
+
+- User can react (laugh, sad, like, love, angry) to a idiom or a review -> the reactions occur in two contexts (idiom and review) so we need to create a schema for it. The relationship between idiom to reactions and review to reactions is unlimited ("one-to-squillions"), so we use "parent-reference" to `user` and `idiom` concept in the schema `reactions`. In addition, because we need to sum the reactions in each group and show it as the content of idiom and reviews, we will denormalize that information and put it in the `idiom` and `review` schema.
 
 - Create `models/user.js`:
+
 ```javascript
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = Schema({
-  name: {type: String, required: true},
-  email: {type: String, required: true, unique: true},
-  password: {type: String, required: true},
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   friendCount: { type: Number, default: 0 },
-  isDeleted: {type: Boolean, default:false},
-})
+  isDeleted: { type: Boolean, default: false },
+});
 
 module.exports = mongoose.model("User", userSchema);
 ```
+
 - Create `models/friendship.js`:
+
 ```javascript
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
@@ -272,12 +298,14 @@ const friendshipSchema = Schema({
 
 module.exports = mongoose.model("Friendship", friendshipSchema);
 ```
-- Create `models/blog.js`:
+
+- Create `models/idiom.js`:
+
 ```javascript
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const blogSchema = Schema({
+const idiomSchema = Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   author: {
@@ -296,9 +324,11 @@ const blogSchema = Schema({
   isDeleted: { type: Boolean, default: false },
 });
 
-module.exports = mongoose.model("Blog", blogSchema);
+module.exports = mongoose.model("Idiom", idiomSchema);
 ```
+
 - Create `models/review.js`:
+
 ```javascript
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
@@ -306,7 +336,7 @@ const Schema = mongoose.Schema;
 const reviewSchema = Schema({
   content: { type: String, required: true },
   user: { type: mongoose.Schema.ObjectId, required: true, ref: "User" },
-  blog: { type: mongoose.Schema.ObjectId, required: true, ref: "Blog" },
+  idiom: { type: mongoose.Schema.ObjectId, required: true, ref: "Idiom" },
   reactions: {
     laugh: { type: Number, default: 0 },
     sad: { type: Number, default: 0 },
@@ -318,14 +348,16 @@ const reviewSchema = Schema({
 
 module.exports = mongoose.model("Review", reviewSchema);
 ```
+
 - Create `models/reaction.js`:
+
 ```javascript
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const reactionSchema = Schema({
   user: { type: mongoose.Schema.ObjectId, required: true, ref: "User" },
-  targetType: { type: String, required: true, enum: ["Blog", "Review"] },
+  targetType: { type: String, required: true, enum: ["Idiom", "Review"] },
   target: {
     type: mongoose.Schema.ObjectId,
     required: true,
@@ -345,22 +377,23 @@ module.exports = mongoose.model("Reaction", reactionSchema);
 
 - In `.gitignore`, add `testing/`
 - Create `/testing/testSchema.js`:
+
   ```javascript
   const mongoose = require("mongoose");
   const User = require("../models/user");
-  const Blog = require("../models/blog");
+  const Idiom = require("../models/idiom");
   const Review = require("../models/review");
   const Reaction = require("../models/reaction");
   const Friendship = require("../models/friendship");
   const faker = require("faker");
 
   /**
-  * Returns a random integer between min (inclusive) and max (inclusive).
-  * The value is no lower than min (or the next integer greater than min
-  * if min isn't an integer) and no greater than max (or the next integer
-  * lower than max if max isn't an integer).
-  * Using Math.round() will give you a non-uniform distribution!
-  */
+   * Returns a random integer between min (inclusive) and max (inclusive).
+   * The value is no lower than min (or the next integer greater than min
+   * if min isn't an integer) and no greater than max (or the next integer
+   * lower than max if max isn't an integer).
+   * Using Math.round() will give you a non-uniform distribution!
+   */
   function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -370,7 +403,7 @@ module.exports = mongoose.model("Reaction", reactionSchema);
   const cleanData = async (startTime) => {
     try {
       // await User.collection.drop();
-      // await Blog.collection.drop();
+      // await Idiom.collection.drop();
       // await Review.collection.drop();
       // await Reaction.collection.drop();
       // await Friendship.collection.drop();
@@ -386,11 +419,11 @@ module.exports = mongoose.model("Reaction", reactionSchema);
     try {
       await cleanData();
       let users = [];
-      let blogs = [];
+      let idioms = [];
       console.log("| Create 10 users:");
       console.log("-------------------------------------------");
       const userNum = 10;
-      const otherNum = 3; // num of blog each user, reviews or reactions each blog
+      const otherNum = 3; // num of idiom each user, reviews or reactions each idiom
       for (let i = 0; i < userNum; i++) {
         await User.create({
           name: faker.name.findName(),
@@ -410,32 +443,32 @@ module.exports = mongoose.model("Reaction", reactionSchema);
           status: "accepted",
         });
       }
-      console.log(`| Each user writes ${otherNum} blogs`);
+      console.log(`| Each user writes ${otherNum} idioms`);
       console.log("-------------------------------------------");
       for (let i = 0; i < userNum; i++) {
         for (let j = 0; j < otherNum; j++) {
-          await Blog.create({
+          await Idiom.create({
             title: faker.lorem.sentence(),
             content: faker.lorem.paragraph(),
             author: users[i]._id,
-          }).then(async (blog) => {
-            console.log("Created blog:" + blog.title);
-            blogs.push(blog);
+          }).then(async (idiom) => {
+            console.log("Created idiom:" + idiom.title);
+            idioms.push(idiom);
 
             console.log(
-              `| Each blog has ${otherNum} reviews from ${otherNum} random users`
+              `| Each idiom has ${otherNum} reviews from ${otherNum} random users`
             );
             console.log("-------------------------------------------");
             for (let k = 0; k < otherNum; k++) {
               await Review.create({
                 content: faker.lorem.sentence(),
                 user: users[getRandomInt(0, userNum - 1)]._id,
-                blog: blog._id,
+                idiom: idiom._id,
               });
             }
 
             console.log(
-              `| Each blog has ${otherNum} reactions from ${otherNum} random users`
+              `| Each idiom has ${otherNum} reactions from ${otherNum} random users`
             );
             console.log("-------------------------------------------");
             const emojis = ["laugh", "sad", "like", "love", "angry"];
@@ -443,8 +476,8 @@ module.exports = mongoose.model("Reaction", reactionSchema);
               await Reaction.create({
                 content: faker.lorem.sentence(),
                 user: users[getRandomInt(0, userNum - 1)]._id,
-                targetType: "Blog",
-                target: blog._id,
+                targetType: "Idiom",
+                target: idiom._id,
                 emoji: emojis[getRandomInt(0, 4)],
               });
             }
@@ -458,24 +491,25 @@ module.exports = mongoose.model("Reaction", reactionSchema);
     }
   };
 
-  const getRandomBlogs = async (blogNum) => {
-    console.log(`Get ${blogNum} random blogs`);
-    const totalBlogNum = await Blog.countDocuments();
-    for (let i = 0; i < blogNum; ++i) {
-      const blog = await Blog.findOne()
-        .skip(getRandomInt(0, totalBlogNum - 1))
+  const getRandomIdioms = async (idiomNum) => {
+    console.log(`Get ${idiomNum} random idioms`);
+    const totalIdiomNum = await Idiom.countDocuments();
+    for (let i = 0; i < idiomNum; ++i) {
+      const idiom = await Idiom.findOne()
+        .skip(getRandomInt(0, totalIdiomNum - 1))
         .populate("author");
-      console.log(blog);
+      console.log(idiom);
     }
   };
 
   const main = async (resetDB = false) => {
     if (resetDB) await generateData();
-    getRandomBlogs(1);
+    getRandomIdioms(1);
   };
 
   main(true);
   ```
+
 - In `app.js`, add:
   ```javascript
   console.log(`Mongoose connected to ${mongoURI}`);
@@ -507,7 +541,7 @@ module.exports = mongoose.model("Reaction", reactionSchema);
   mongoose.connect(mongoURI, {...
   ```
 
-#### Add `isDeleted: false` to every query for user or blog
+#### Add `isDeleted: false` to every query for user or idiom
 
 - Create `models/plugins/isDeletedFalse.js`, add:
   ```javascript
@@ -519,28 +553,29 @@ module.exports = mongoose.model("Reaction", reactionSchema);
     });
   };
   ```
-- In `models/blog.js`, add:
+- In `models/idiom.js`, add:
   ```javascript
-  blogSchema.plugin(require("./plugins/isDeletedFalse"));
+  idiomSchema.plugin(require("./plugins/isDeletedFalse"));
   ```
 - In `models/user.js`, add:
   ```javascript
   userSchema.plugin(require("./plugins/isDeletedFalse"));
   ```
 
-#### Calculate number of review each blog
+#### Calculate number of review each idiom
 
 - In `models/review.js`, add:
+
   ```javascript
-  // Calculate Review Count and update in Blog
-  reviewSchema.statics.calculateReviews = async function (blogId) {
-    const reviewCount = await this.find({ blog: blogId }).count();
-    await Blog.findByIdAndUpdate(blogId, { reviewCount: reviewCount });
+  // Calculate Review Count and update in Idiom
+  reviewSchema.statics.calculateReviews = async function (idiomId) {
+    const reviewCount = await this.find({ idiom: idiomId }).count();
+    await Idiom.findByIdAndUpdate(idiomId, { reviewCount: reviewCount });
   };
 
   reviewSchema.post("save", function () {
     // this point to current review
-    this.constructor.calculateReviews(this.blog);
+    this.constructor.calculateReviews(this.idiom);
   });
 
   // Neither findByIdAndUpdate norfindByIdAndDelete have access to document middleware.
@@ -553,13 +588,14 @@ module.exports = mongoose.model("Reaction", reactionSchema);
   });
 
   reviewSchema.post(/^findOneAnd/, async function (next) {
-    await this.doc.constructor.calculateReviews(this.doc.blog);
+    await this.doc.constructor.calculateReviews(this.doc.idiom);
   });
   ```
 
 #### Calculate number of friends of each user
 
 - In `models/friendship.js`, add:
+
   ```javascript
   friendshipSchema.statics.calculateFriendCount = async function (userId) {
     const friendCount = await this.find({
@@ -585,9 +621,10 @@ module.exports = mongoose.model("Reaction", reactionSchema);
   });
   ```
 
-#### Calculate number of each type of reactions of each blog
+#### Calculate number of each type of reactions of each idiom
 
 - In `models/reactions.js`, add:
+
   ```javascript
   reactionSchema.statics.calculateReaction = async function (
     targetId,
@@ -659,4 +696,4 @@ module.exports = mongoose.model("Reaction", reactionSchema);
 
 ### Setup Routes and Controllers
 
-#### 
+####

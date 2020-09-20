@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const reactionSchema = Schema(
   {
     user: { type: Schema.ObjectId, required: true, ref: "User" },
-    targetType: { type: String, required: true, enum: ["Blog", "Review"] },
+    targetType: { type: String, required: true, enum: ["Idiom", "Review"] },
     target: {
       type: Schema.ObjectId,
       required: true,
