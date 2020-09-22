@@ -5,6 +5,13 @@ const GlobalMessage = require("../models/GlobalMessage");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+//Adding imports
+const Server = require("../models/socket-game/server");
+const Score = require("../models/socket-game/score");
+const Room = require("../models/socket-game/room");
+// const User = require("../models/User");
+
+// End adding imports
 
 const io = socket_io();
 const socketApi = {};
@@ -44,6 +51,72 @@ io.use((socket, next) => {
 io.on("connection", async function (socket) {
   onlineUsers[socket.userId] = socket.id;
   console.log("Connected", socket.userId);
+
+  //Adding
+
+  let rooms = await Room.find().populate("members");
+  console.log("rooms ahihi", rooms);
+  socket.emit("rooms", rooms);
+  //fecth users
+  socket.emit("users", await User.find().sort({ updatedAt: -1 }));
+
+  //logins
+  socket.on("login", async (name, res) => {
+    const user = await Server.login(name, socket.id);
+    console.log("ahihi");
+    return res(user);
+  });
+
+  // join room
+  socket.on("joinRoom", async (roomID, res) => {
+    try {
+      // check user
+      const user = await Server.checkUser(socket.id);
+
+      // join room (DB)
+      const room = await user.joinRoom(roomID);
+
+      // subscribe user to the room
+      socket.join(room._id);
+
+      const rooms = await Room.find().populate("members");
+      io.emit("rooms", rooms);
+      // send notification message;
+      io.to(room._id).emit("message", {
+        user: {
+          name: "System",
+        },
+        chat: `Welcome ${user.user.name} to room ${room.room}`,
+      });
+      const scoreHistory = await Score.find({ room: room._id })
+        .populate("user")
+        .sort("-createdAt")
+        .limit(20);
+      scoreHistory.unshift({
+        user: {
+          name: "System",
+        },
+        score: `You have joined room: ${room.room}.`,
+      });
+      socket.emit("scoreHistory", scoreHistory);
+      // return room info to client
+      return res({ status: "ok", data: { room: room } });
+    } catch (err) {
+      return res({ status: "error", message: err.message });
+    }
+  });
+  // chat
+  socket.on("sendScore", async function (score) {
+    const user = await Server.checkUser(socket.id);
+    const Score = await user.score(score);
+    io.to(user.user.room._id).emit("message", Score);
+  });
+  // leave room
+  socket.on("leaveRoom", async function (roomID) {
+    socket.leave(roomID);
+  });
+
+  // End adding
 
   socket.on(socketTypes.GLOBAL_MSG_INIT, async () => {
     try {

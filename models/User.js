@@ -14,6 +14,10 @@ const userSchema = Schema(
     friendCount: { type: Number, default: 0 },
     favoriteWords: [{ type: Schema.ObjectId, required: true, ref: "Idiom" }],
     isDeleted: { type: Boolean, default: false, select: false },
+    room: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Room",
+    },
   },
   { timestamps: true }
 );

@@ -127,7 +127,7 @@ idiomController.favoriteWord = catchAsync(async (req, res, next) => {
         $addToSet: { favoriteWords: mongoose.Types.ObjectId(idiomId) },
       },
       { new: true }
-    );
+    ).populate("favoriteWords");
   } else {
     user = await User.findOneAndUpdate(
       { _id: req.userId },
@@ -135,7 +135,7 @@ idiomController.favoriteWord = catchAsync(async (req, res, next) => {
         $pull: { favoriteWords: mongoose.Types.ObjectId(idiomId) },
       },
       { new: true }
-    );
+    ).populate("favoriteWords");
   }
   console.log(user);
   // console.log(user);
