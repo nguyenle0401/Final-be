@@ -14,6 +14,7 @@ const userSchema = Schema(
     friendCount: { type: Number, default: 0 },
     favoriteWords: [{ type: Schema.ObjectId, required: true, ref: "Idiom" }],
     isDeleted: { type: Boolean, default: false, select: false },
+    pin: { type: Number, required: true, default: 0 },
     room: {
       type: mongoose.Schema.ObjectId,
       ref: "Room",

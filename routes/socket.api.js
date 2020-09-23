@@ -6,9 +6,8 @@ const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 //Adding imports
-const Server = require("../models/socket-game/server");
-const Score = require("../models/socket-game/score");
-const Room = require("../models/socket-game/room");
+const Idiom = require("../models/Idiom");
+const { raw } = require("express");
 // const User = require("../models/User");
 
 // End adding imports
@@ -28,6 +27,21 @@ const socketTypes = {
 };
 
 socketApi.io = io;
+
+let playingInfo = {};
+
+const numberOfQuestion = 5;
+
+const notPlaying = (meId) => {
+  console.log("meId", onlineUsers);
+  return Object.keys(onlineUsers).filter(
+    (id) => !Object.keys(playingInfo).includes(id) && meId !== id
+  );
+};
+const getOpponentId = (meId) => {
+  let notPlayingList = notPlaying(meId);
+  return notPlayingList[0];
+};
 
 io.use((socket, next) => {
   try {
@@ -49,74 +63,64 @@ io.use((socket, next) => {
 });
 
 io.on("connection", async function (socket) {
-  onlineUsers[socket.userId] = socket.id;
-  console.log("Connected", socket.userId);
-
-  //Adding
-
-  let rooms = await Room.find().populate("members");
-  console.log("rooms ahihi", rooms);
-  socket.emit("rooms", rooms);
-  //fecth users
-  socket.emit("users", await User.find().sort({ updatedAt: -1 }));
-
-  //logins
-  socket.on("login", async (name, res) => {
-    const user = await Server.login(name, socket.id);
-    console.log("ahihi");
-    return res(user);
-  });
-
-  // join room
-  socket.on("joinRoom", async (roomID, res) => {
-    try {
-      // check user
-      const user = await Server.checkUser(socket.id);
-
-      // join room (DB)
-      const room = await user.joinRoom(roomID);
-
-      // subscribe user to the room
-      socket.join(room._id);
-
-      const rooms = await Room.find().populate("members");
-      io.emit("rooms", rooms);
-      // send notification message;
-      io.to(room._id).emit("message", {
-        user: {
-          name: "System",
-        },
-        chat: `Welcome ${user.user.name} to room ${room.room}`,
-      });
-      const scoreHistory = await Score.find({ room: room._id })
-        .populate("user")
-        .sort("-createdAt")
-        .limit(20);
-      scoreHistory.unshift({
-        user: {
-          name: "System",
-        },
-        score: `You have joined room: ${room.room}.`,
-      });
-      socket.emit("scoreHistory", scoreHistory);
-      // return room info to client
-      return res({ status: "ok", data: { room: room } });
-    } catch (err) {
-      return res({ status: "error", message: err.message });
+  // onlineUsers[socket.userId] = socket.id;
+  socket.on("online", async (meId) => {
+    console.log("Connected", meId);
+    onlineUsers[meId] = socket.id;
+    if (Object.keys(playingInfo).includes(meId)) {
+      // socket.emit("play", {
+      //   opponent: playingInfo[meId].opponent,
+      //   questions: playingInfo[meId].questions,
+      // });
+      let opId = playingInfo[meId].opponent;
+      socket.emit("opponent", opId);
+    } else {
+      let opId = getOpponentId(meId);
+      // playingIds.push(opId);
+      if (opId) {
+        let op = await User.find({ _id: opId });
+        let me = await User.find({ _id: meId });
+        socket.emit("opponent", op);
+        io.to(onlineUsers[opId]).emit("opponent", me);
+        let rawQuestions = await Idiom.aggregate([
+          { $match: {} },
+          { $sample: { size: numberOfQuestion } },
+          { $project: { _id: 1, title: 1, content: 1 } },
+        ]);
+        console.log("rawQuestions", rawQuestions);
+        const fakePromises = rawQuestions.map(async (rawQuestion) => {
+          return await Idiom.aggregate([
+            { $match: { _id: { $ne: rawQuestion._id } } },
+            { $sample: { size: 3 } },
+            { $project: { _id: 1, content: 1 } },
+          ]);
+        });
+        try {
+          let fake = await Promise.all(fakePromises);
+          console.log("fake", fake);
+          const questions = rawQuestions.map((rawQuestion, index) => {
+            console.log("ahihe", rawQuestion);
+            return {
+              ...rawQuestion,
+              answer: rawQuestion.content,
+              answer1: fake[index][0].content,
+              answer2: fake[index][1].content,
+              answer3: fake[index][2].content,
+            };
+          });
+          socket.emit("questions", questions);
+          io.to(onlineUsers[opId]).emit("questions", questions);
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
   });
-  // chat
-  socket.on("sendScore", async function (score) {
-    const user = await Server.checkUser(socket.id);
-    const Score = await user.score(score);
-    io.to(user.user.room._id).emit("message", Score);
-  });
-  // leave room
-  socket.on("leaveRoom", async function (roomID) {
-    socket.leave(roomID);
-  });
 
-  // End adding
+  socket.on("offline", async (meId) => {
+    console.log("Disconnected", meId);
+    delete onlineUsers[meId];
+  });
 
   socket.on(socketTypes.GLOBAL_MSG_INIT, async () => {
     try {
@@ -245,8 +249,8 @@ io.on("connection", async function (socket) {
   });
 
   socket.on("disconnect", () => {
-    console.log("Disconnected", socket.userId);
-    delete onlineUsers[socket.userId];
+    // console.log("Disconnected", socket.userId);
+    // delete onlineUsers[socket.userId];
     io.emit(socketTypes.NOTIFICATION, {
       onlineUsers: Object.keys(onlineUsers),
     });
