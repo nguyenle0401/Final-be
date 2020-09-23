@@ -7,7 +7,6 @@ const Message = require("../models/Message");
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 //Adding imports
 const Idiom = require("../models/Idiom");
-const { raw } = require("express");
 // const User = require("../models/User");
 
 // End adding imports
@@ -67,59 +66,74 @@ io.on("connection", async function (socket) {
   socket.on("online", async (meId) => {
     console.log("Connected", meId);
     onlineUsers[meId] = socket.id;
-    if (Object.keys(playingInfo).includes(meId)) {
-      // socket.emit("play", {
-      //   opponent: playingInfo[meId].opponent,
-      //   questions: playingInfo[meId].questions,
-      // });
-      let opId = playingInfo[meId].opponent;
-      socket.emit("opponent", opId);
-    } else {
-      let opId = getOpponentId(meId);
-      // playingIds.push(opId);
-      if (opId) {
-        let op = await User.find({ _id: opId });
-        let me = await User.find({ _id: meId });
-        socket.emit("opponent", op);
-        io.to(onlineUsers[opId]).emit("opponent", me);
-        let rawQuestions = await Idiom.aggregate([
-          { $match: {} },
-          { $sample: { size: numberOfQuestion } },
-          { $project: { _id: 1, title: 1, content: 1 } },
+    let opId = getOpponentId(meId);
+    // playingIds.push(opId);
+    if (opId) {
+      playingInfo[meId] = { opponent: opId, clickState: false };
+      playingInfo[opId] = { opponent: meId, clickState: false };
+      let op = await User.find({ _id: opId });
+      let me = await User.find({ _id: meId });
+      socket.emit("opponent", op);
+      io.to(onlineUsers[opId]).emit("opponent", me);
+      //Update Score
+
+      let rawQuestions = await Idiom.aggregate([
+        { $match: {} },
+        { $sample: { size: numberOfQuestion } },
+        { $project: { _id: 1, title: 1, content: 1 } },
+      ]);
+      const fakePromises = rawQuestions.map(async (rawQuestion) => {
+        return await Idiom.aggregate([
+          { $match: { _id: { $ne: rawQuestion._id } } },
+          { $sample: { size: 3 } },
+          { $project: { _id: 1, content: 1 } },
         ]);
-        console.log("rawQuestions", rawQuestions);
-        const fakePromises = rawQuestions.map(async (rawQuestion) => {
-          return await Idiom.aggregate([
-            { $match: { _id: { $ne: rawQuestion._id } } },
-            { $sample: { size: 3 } },
-            { $project: { _id: 1, content: 1 } },
-          ]);
+      });
+      try {
+        let fake = await Promise.all(fakePromises);
+        const questions = rawQuestions.map((rawQuestion, index) => {
+          return {
+            ...rawQuestion,
+            answer: rawQuestion.content,
+            answer1: fake[index][0].content,
+            answer2: fake[index][1].content,
+            answer3: fake[index][2].content,
+          };
         });
-        try {
-          let fake = await Promise.all(fakePromises);
-          console.log("fake", fake);
-          const questions = rawQuestions.map((rawQuestion, index) => {
-            console.log("ahihe", rawQuestion);
-            return {
-              ...rawQuestion,
-              answer: rawQuestion.content,
-              answer1: fake[index][0].content,
-              answer2: fake[index][1].content,
-              answer3: fake[index][2].content,
-            };
-          });
-          socket.emit("questions", questions);
-          io.to(onlineUsers[opId]).emit("questions", questions);
-        } catch (err) {
-          console.error(err);
-        }
+        socket.emit("questions", questions);
+        io.to(onlineUsers[opId]).emit("questions", questions);
+      } catch (err) {
+        console.error(err);
       }
+    }
+  });
+
+  socket.on("updateScore", async (meId, score) => {
+    let opId = playingInfo[meId].opponent;
+    io.to(onlineUsers[opId]).emit("opScore", score);
+  });
+
+  socket.on("clickState", async (meId) => {
+    console.log("clickState");
+    let opId = playingInfo[meId].opponent;
+    playingInfo[meId].clickState = !playingInfo[meId].clickState;
+    if (playingInfo[meId].clickState === playingInfo[opId].clickState) {
+      socket.emit("next");
+      io.to(onlineUsers[opId]).emit("next");
     }
   });
 
   socket.on("offline", async (meId) => {
     console.log("Disconnected", meId);
+    if (playingInfo[meId]) {
+      let opId = playingInfo[meId].opponent;
+      if (opId) {
+        io.to(onlineUsers[opId]).emit("opponent", null);
+        delete playingInfo[opId];
+      }
+    }
     delete onlineUsers[meId];
+    delete playingInfo[meId];
   });
 
   socket.on(socketTypes.GLOBAL_MSG_INIT, async () => {
