@@ -118,6 +118,7 @@ io.on("connection", async function (socket) {
     let opId = playingInfo[meId].opponent;
     playingInfo[meId].clickState = !playingInfo[meId].clickState;
     if (playingInfo[meId].clickState === playingInfo[opId].clickState) {
+      console.log("next");
       socket.emit("next");
       io.to(onlineUsers[opId]).emit("next");
     }
