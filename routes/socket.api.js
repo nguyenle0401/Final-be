@@ -94,7 +94,7 @@ io.on("connection", async function (socket) {
         const questions = rawQuestions.map((rawQuestion, index) => {
           return {
             ...rawQuestion,
-            answer: rawQuestion.content,
+            answer0: rawQuestion.content,
             answer1: fake[index][0].content,
             answer2: fake[index][1].content,
             answer3: fake[index][2].content,
