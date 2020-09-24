@@ -28,21 +28,8 @@ userController.register = catchAsync(async (req, res, next) => {
     password,
     avatarUrl,
     emailVerificationCode,
-    emailVerified: false,
   });
   const accessToken = await user.generateToken();
-
-  const verificationURL = `${FRONTEND_URL}/verify/${emailVerificationCode}`;
-  const emailData = await emailHelper.renderEmailTemplate(
-    "verify_email",
-    { name, code: verificationURL },
-    email
-  );
-  if (!emailData.error) {
-    emailHelper.send(emailData);
-  } else {
-    return next(new AppError(500, emailData.error, "Create Email Error"));
-  }
 
   return sendResponse(
     res,

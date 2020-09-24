@@ -10,7 +10,7 @@ const userSchema = Schema(
     avatarUrl: { type: String, require: false },
     password: { type: String, required: true, select: false },
     emailVerificationCode: { type: String, select: false },
-    emailVerified: { type: Boolean, require: true, default: false },
+    emailVerified: { type: Boolean, require: true, default: true },
     friendCount: { type: Number, default: 0 },
     favoriteWords: [{ type: Schema.ObjectId, required: true, ref: "Idiom" }],
     isDeleted: { type: Boolean, default: false, select: false },
